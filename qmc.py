@@ -179,6 +179,59 @@ class QuineMcCluskey:
         # First step of Quine-McCluskey method.
         prime_implicants = self.__get_prime_implicants(terms)
 
+        pil = list(prime_implicants)
+        plen = len(pil)
+        # print(ones)
+        s_ones = set(ones)
+        # print("s_ones", s_ones)
+        possibilities = []
+        best_term_count = 10000000000
+        best_term_sum = 100000000000
+        # print("2^K", plen)
+        def var_len(bitstring):
+            cnt = 0
+            for i in bitstring:
+                if i == 0 or i == 1:
+                    cnt += 1
+            return cnt
+
+        def ch_to_rep(seq):
+            _ret = []
+            for _idx, _i in seq:
+                if _i == 1:
+                    _ret += [pil[_idx]]
+            return _ret
+
+        for ch in itertools.product((0,1), repeat=plen):
+            total = set()
+            for idx, i in enumerate(ch):
+                if i == 1:
+                    # print(" >", pil[idx])
+                    total = total.union(self.permutations(pil[idx]))
+            # print(total)
+            if s_ones.issubset(total):
+                sig = []
+                rep = []
+                for idx, i in enumerate(ch):
+                    if i == 1:
+                        rep += [var_len(ch)]
+                        sig += [pil[idx]]
+                summation = sum(rep)
+                rep_len = len(rep)
+                # print(summation, rep_len)
+                if (rep_len, summation) < (best_term_count, best_term_sum):
+                    possibilities = [sig]
+                    best_term_count, best_term_sum = rep_len, summation
+                elif rep_len == best_term_count and summation == best_term_sum:
+                    possibilities += [sig]
+            # else:
+                # print("not full", ch)
+
+        # print(possibilities)
+        return possibilities
+
+
+
         # Remove essential terms.
         essential_implicants = self.__get_essential_implicants(prime_implicants, set(dc))
 
@@ -637,7 +690,8 @@ class QuineMcCluskey:
         if self.reversed:
             for i in reversed(range(len(x))):
                 if x[i] == '0':
-                    var_list.append(f"\\bar{{{chr(self.n_bits - i - 1 + 65)}}}")
+                    # var_list.append(f"\\bar{{{chr(self.n_bits - i - 1 + 65)}}}")
+                    var_list.append(chr(self.n_bits - i - 1 + 65) + "'")
                 elif x[i] == '1':
                     var_list.append(chr(self.n_bits - i - 1 + 65))
             return var_list
@@ -650,8 +704,9 @@ class QuineMcCluskey:
             return var_list
 
     def find_result(self, ones, dc, num_bits=4):
-        s_res = self.simplify(ones, dc, num_bits)
+        s_res = self.simplify(ones, dc, num_bits)[0]
         final_result = [self.findVariables(i) for i in s_res]
-        solution_str = f"F = {' + '.join(''.join(i) for i in final_result)}"
+        # final_result = s_res
+        solution_str = f"{'+'.join(''.join(i) for i in final_result)}"
 
         return final_result, solution_str

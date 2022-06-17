@@ -12,7 +12,7 @@ from copy import deepcopy
     reverse: when set to True, A denotes the lowest bit
 """
 bits = 4
-root = "E:\\Kmap\\"
+root = "E:\\Kmap4bf\\"
 reverse = True
 
 
@@ -31,7 +31,7 @@ def calc(prelude, iterator, q: Queue):
     directory_buffer = set()
     prev = 0
     for cnt, o_expr in iterator:
-        o_expr = tuple(prelude + list(o_expr))
+        o_expr = tuple(list(prelude) + list(o_expr))
 
         expr = list(enumerate(o_expr))
         f_minimum = list(filter(lambda x: x[1] == 1, expr))
@@ -63,9 +63,9 @@ def calc(prelude, iterator, q: Queue):
         _, result = QuineMcCluskey() \
             .find_result(in_minimum, in_arbitrary, bits)
 
-        TOC = f"\n- min: {' '.join(out_minimum)}; "
-        TOC += f"arb: {' '.join(out_arbitrary)}; "
-        TOC += f"${result}$\n"
+        TOC = f"\n- min:{' '.join(out_minimum)}; "
+        TOC += f"arb:{' '.join(out_arbitrary)}; "
+        TOC += f"$F={result}$\n"
 
         if path in buffer:
             buffer[path] += TOC
@@ -85,12 +85,15 @@ def calc(prelude, iterator, q: Queue):
 
 
 if __name__ == "__main__":
-    iterator = enumerate(product(*(((0, 1, 2),) * ((2 ** bits) - 1))))
+    prelude_log = 3
+    preludes = list(product(*(((0, 1, 2),) * prelude_log)))
+    print(len(preludes))
+    iterator = enumerate(product(*(((0, 1, 2),) * ((2 ** bits) - prelude_log))))
     Q = Manager().Queue()
     with tqdm(total=3 ** (2 ** bits)) as t:
         with Pool() as p:
             returns = 0
-            groups = [([ch], deepcopy(iterator), Q) for ch in (0, 1, 2)]
+            groups = [(pl, deepcopy(iterator), Q) for pl in preludes]
             grp = p.starmap_async(calc, groups)
             while returns != 3:
                 sleep(0.5)
