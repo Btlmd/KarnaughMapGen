@@ -205,11 +205,13 @@ class QuineMcCluskey:
         for ch in itertools.product((0,1), repeat=plen):
             total = set()
             fail = False
+            cnt = 0
             for idx, i in enumerate(ch):
                 if i == 1:
+                    cnt += 1
                     # print(" >", pil[idx])
                     total = total.union(self.permutations(pil[idx]))
-                if idx >= best_term_count:
+                if cnt > best_term_count:
                     fail = True
                     break
             if fail:
