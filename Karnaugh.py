@@ -12,7 +12,7 @@ from copy import deepcopy
     reverse: when set to True, A denotes the lowest bit
 """
 bits = 4
-root = "E:\\Kmap4bf\\"
+root = "./k_full/"
 reverse = True
 
 
@@ -33,11 +33,13 @@ def calc(prelude, iterator, q: Queue):
     for cnt, o_expr in iterator:
         o_expr = tuple(list(prelude) + list(o_expr))
 
+        assert len(o_expr) == 2 ** bits
+
         expr = list(enumerate(o_expr))
         f_minimum = list(filter(lambda x: x[1] == 1, expr))
         f_arbitrary = list(filter(lambda x: x[1] == 2, expr))
 
-        if len(f_minimum) <= 1:
+        if len(f_minimum) == 0:
             continue
 
         in_minimum = [e[0] for e in f_minimum]
@@ -55,8 +57,8 @@ def calc(prelude, iterator, q: Queue):
                 "".join(map(str, o_expr[i: i + step]))
                     .replace('2', 'X')
             ]
-        directory = root + '\\'.join(splits[:-1])
-        path = directory + "\\" + splits[-1] + ".md"
+        directory = root + '/'.join(splits[:-1])
+        path = directory + "/" + splits[-1] + ".md"
 
         # print(out_minimum, out_arbitrary)
 
@@ -65,7 +67,7 @@ def calc(prelude, iterator, q: Queue):
 
         TOC = f"\n- min:{' '.join(out_minimum)}; "
         TOC += f"arb:{' '.join(out_arbitrary)}; "
-        TOC += f"$F={result}$\n"
+        TOC += f"${result}$\n"
 
         if path in buffer:
             buffer[path] += TOC
@@ -73,7 +75,7 @@ def calc(prelude, iterator, q: Queue):
             buffer[path] = TOC
         directory_buffer.add(directory)
 
-        if (cnt + 1) % (3 ** 7) == 0:
+        if (cnt + 1) % (3 ** 10) == 0:
             exec_buffer(buffer, directory_buffer)
             buffer = {}
             directory_buffer = set()
@@ -85,8 +87,9 @@ def calc(prelude, iterator, q: Queue):
 
 
 if __name__ == "__main__":
-    prelude_log = 3
+    prelude_log = 4
     preludes = list(product(*(((0, 1, 2),) * prelude_log)))
+    lpl = len(preludes)
     print(len(preludes))
     iterator = enumerate(product(*(((0, 1, 2),) * ((2 ** bits) - prelude_log))))
     Q = Manager().Queue()
@@ -95,7 +98,7 @@ if __name__ == "__main__":
             returns = 0
             groups = [(pl, deepcopy(iterator), Q) for pl in preludes]
             grp = p.starmap_async(calc, groups)
-            while returns != 3:
+            while returns != lpl:
                 sleep(0.5)
                 while not Q.empty():
                     q = Q.get()

@@ -191,7 +191,7 @@ class QuineMcCluskey:
         def var_len(bitstring):
             cnt = 0
             for i in bitstring:
-                if i == 0 or i == 1:
+                if i == "0" or i == "1":
                     cnt += 1
             return cnt
 
@@ -204,17 +204,23 @@ class QuineMcCluskey:
 
         for ch in itertools.product((0,1), repeat=plen):
             total = set()
+            fail = False
             for idx, i in enumerate(ch):
                 if i == 1:
                     # print(" >", pil[idx])
                     total = total.union(self.permutations(pil[idx]))
+                if idx >= best_term_count:
+                    fail = True
+                    break
+            if fail:
+                continue
             # print(total)
             if s_ones.issubset(total):
                 sig = []
                 rep = []
                 for idx, i in enumerate(ch):
                     if i == 1:
-                        rep += [var_len(ch)]
+                        rep += [var_len(pil[idx])]
                         sig += [pil[idx]]
                 summation = sum(rep)
                 rep_len = len(rep)
@@ -690,8 +696,8 @@ class QuineMcCluskey:
         if self.reversed:
             for i in reversed(range(len(x))):
                 if x[i] == '0':
-                    # var_list.append(f"\\bar{{{chr(self.n_bits - i - 1 + 65)}}}")
-                    var_list.append(chr(self.n_bits - i - 1 + 65) + "'")
+                    var_list.append(f"\\bar{{{chr(self.n_bits - i - 1 + 65)}}}")
+                    # var_list.append(chr(self.n_bits - i - 1 + 65) + "'")
                 elif x[i] == '1':
                     var_list.append(chr(self.n_bits - i - 1 + 65))
             return var_list
@@ -704,9 +710,13 @@ class QuineMcCluskey:
             return var_list
 
     def find_result(self, ones, dc, num_bits=4):
-        s_res = self.simplify(ones, dc, num_bits)[0]
-        final_result = [self.findVariables(i) for i in s_res]
+        s_res = self.simplify(ones, dc, num_bits)
+        # return s_res
+        p_res = []
+        for poss in s_res:
+            final_result = [self.findVariables(i) for i in poss]
+            p_res += [final_result]
         # final_result = s_res
-        solution_str = f"{'+'.join(''.join(i) for i in final_result)}"
+        solution_str = '\ |\ '.join([f"F={'+'.join(''.join(i) for i in poss)}" for poss in p_res])
 
-        return final_result, solution_str
+        return None, solution_str
